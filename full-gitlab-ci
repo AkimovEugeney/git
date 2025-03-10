@@ -1,0 +1,110 @@
+image: node:22
+
+stages:
+  - lint
+  - build
+  - sync_shared_types
+  - deploy
+
+# Переменные для CI/CD
+# variables:
+  # NODE_ENV: "test"
+  # DOCKPLOY_API_URL: "http://your_addres/api/application.deploy"
+  # DOCKPLOY_TOKEN: ""
+  # APPLICATION_ID: ""
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+before_script:
+  - yarn install --frozen-lockfile
+
+# 📌 Проверка ESLint перед Merge Request
+# eslint:
+#   stage: lint
+#   script:
+#     - yarn lint
+#   only:
+#     - merge_requests
+#   cache:
+#     key: ${CI_COMMIT_REF_SLUG}
+#     paths:
+#       - node_modules/
+
+# 📌 Запускаем unit-тесты перед Merge Request
+# unit_tests:
+#   stage: test
+#   script:
+#     - yarn test
+#   only:
+#     - merge_requests
+
+# 📌 Собираем проект перед Merge Request
+build:
+  stage: build
+  script:
+    - yarn lint
+    - yarn build
+  only:
+    - merge_requests
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - dist/  
+
+# 📌 Подтягиваем shared-types через git subtree после merge
+sync_shared_types:
+  stage: sync_shared_types
+  script:
+  - git config --global user.email "ci@gitlab.com"
+  - git config --global user.name "GitLab CI"
+  - git remote set-url shared-types https://akimoveugeney:glpat-MJrQn98UyFCmrzQHfQDs@gitlab.com/akimov0/shop/shared-types.git
+  - git subtree pull --prefix=shared-types shared-types dev --squash
+
+  only:
+    - stage
+    - prod
+  resource_group: exclusive_pipeline 
+
+# 📌 Деплой в Dockploy через API (только после merge)
+deploy:
+  stage: deploy
+  script:
+    - |
+      echo "DOCKPLOY_API_URL: $DOCKPLOY_API_URL"
+      echo "APPLICATION_ID: $APPLICATION_ID"
+      echo "DOCKPLOY_TOKEN: $DOCKPLOY_TOKEN"
+      
+      if [ -z "$DOCKPLOY_API_URL" ] || [ -z "$APPLICATION_ID" ] || [ -z "$DOCKPLOY_TOKEN" ]; then
+        echo "Error: Required variables are not set!"
+        exit 1
+      fi
+      
+      # Выполнение запроса
+      RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOCKPLOY_API_URL" \
+        -H 'accept: application/json' \
+        -H 'Content-Type: application/json' \
+        -H "x-api-key: $DOCKPLOY_TOKEN" \
+        -d '{
+          "applicationId": "'"$APPLICATION_ID"'"
+        }'
+      )
+      HTTP_STATUS=${RESPONSE: -3}
+      BODY=${RESPONSE%???}
+      
+      echo "Response: $BODY"
+      echo "HTTP Status: $HTTP_STATUS"
+      
+      if [[ $HTTP_STATUS -ge 200 && $HTTP_STATUS -lt 300 ]]; then
+        echo "Deployment successful!"
+      else
+        echo "Deployment failed with status $BODY $HTTP_STATUS"
+        exit 1
+      fi
+  only:
+    - stage
+    - prod
+  resource_group: exclusive_pipeline
