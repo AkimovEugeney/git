@@ -62,5 +62,5 @@ deploy:
       fi
   only:
     - stage
-    - prod
+    - main
   resource_group: exclusive_pipeline
