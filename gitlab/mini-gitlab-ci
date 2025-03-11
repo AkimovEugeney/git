@@ -45,14 +45,14 @@ deploy:
 
       # Проверяем, что все переменные заданы
       MISSING_VARS=()
-      if [ -z "$DOCKPLOY_API_URL" ]; then
+      if [ -z "$DOKPLOY_API_URL" ]; then
         MISSING_VARS+=("DOCKPLOY_API_URL")
       fi
       if [ -z "$APPLICATION_ID" ]; then
         MISSING_VARS+=("APPLICATION_ID")
       fi
-      if [ -z "$DOCKPLOY_API_TOKEN" ]; then
-        MISSING_VARS+=("DOCKPLOY_API_TOKEN")
+      if [ -z "$DOKPLOY_API_TOKEN" ]; then
+        MISSING_VARS+=("DOKPLOY_API_TOKEN")
       fi
 
       # Если есть отсутствующие переменные, выводим ошибку
@@ -65,10 +65,10 @@ deploy:
       fi
       
       # Выполнение запроса
-      RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOCKPLOY_API_URL" \
+      RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOKPLOY_API_URL" \
         -H 'accept: application/json' \
         -H 'Content-Type: application/json' \
-        -H "x-api-key: $DOCKPLOY_API_TOKEN" \
+        -H "x-api-key: $DOKPLOY_API_TOKEN" \
         -d '{
           "applicationId": "'"$APPLICATION_ID"'"
         }'
