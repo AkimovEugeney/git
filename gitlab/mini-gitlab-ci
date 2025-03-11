@@ -33,8 +33,18 @@ deploy:
   stage: deploy
   script:
     - |
-      
-      if [ -z "$DOCKPLOY_API_URL" ] || [ -z "$APPLICATION_ID" ] || [ -z "$DOCKPLOY_TOKEN" ]; then
+      # Определяем APPLICATION_ID в зависимости от ветки
+      if [[ "$CI_COMMIT_REF_NAME" == "stage" ]]; then
+        APPLICATION_ID="$STAGE_APPLICATION_ID"
+      elif [[ "$CI_COMMIT_REF_NAME" == "main" ]]; then
+        APPLICATION_ID="$MAIN_APPLICATION_ID"
+      else
+        echo "Error: Unsupported branch!"
+        exit 1
+      fi
+
+      # Проверяем, что все переменные заданы
+      if [ -z "$DOCKPLOY_API_URL" ] || [ -z "$APPLICATION_ID" ] || [ -z "$DOCKPLOY_API_TOKEN" ]; then
         echo "Error: Required variables are not set!"
         exit 1
       fi
@@ -43,9 +53,9 @@ deploy:
       RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOKPLOY_API_URL" \
         -H 'accept: application/json' \
         -H 'Content-Type: application/json' \
-        -H "x-api-key: $DOKPLOY_API_TOKEN" \
+        -H "x-api-key: $DOKPLOY_TOKEN" \
         -d '{
-          "applicationId": "'"$DOKPLOY_APPLICATION_ID"'"
+          "applicationId": "'"$APPLICATION_ID"'"
         }'
       )
       HTTP_STATUS=${RESPONSE: -3}
