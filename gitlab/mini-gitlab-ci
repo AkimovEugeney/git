@@ -44,16 +44,31 @@ deploy:
       fi
 
       # Проверяем, что все переменные заданы
-      if [ -z "$DOCKPLOY_API_URL" ] || [ -z "$APPLICATION_ID" ] || [ -z "$DOCKPLOY_API_TOKEN" ]; then
-        echo "Error: Required variables are not set!"
+      MISSING_VARS=()
+      if [ -z "$DOCKPLOY_API_URL" ]; then
+        MISSING_VARS+=("DOCKPLOY_API_URL")
+      fi
+      if [ -z "$APPLICATION_ID" ]; then
+        MISSING_VARS+=("APPLICATION_ID")
+      fi
+      if [ -z "$DOCKPLOY_API_TOKEN" ]; then
+        MISSING_VARS+=("DOCKPLOY_API_TOKEN")
+      fi
+
+      # Если есть отсутствующие переменные, выводим ошибку
+      if [ ${#MISSING_VARS[@]} -ne 0 ]; then
+        echo "Error: The following required variables are not set:"
+        for var in "${MISSING_VARS[@]}"; do
+          echo "  - $var"
+        done
         exit 1
       fi
       
       # Выполнение запроса
-      RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOKPLOY_API_URL" \
+      RESPONSE=$(curl -s -w "\n%{http_code}" -X 'POST' "$DOCKPLOY_API_URL" \
         -H 'accept: application/json' \
         -H 'Content-Type: application/json' \
-        -H "x-api-key: $DOKPLOY_TOKEN" \
+        -H "x-api-key: $DOCKPLOY_API_TOKEN" \
         -d '{
           "applicationId": "'"$APPLICATION_ID"'"
         }'
