@@ -36,7 +36,7 @@ setup_branch() {
 git checkout main
 
 # Install ESLint & Prettier
-yarn add ep-setup
+npx ep-setup
 
 # Add Git subtree to main if URL is provided
 if [ -n "$SUBTREE_REPO_URL" ]; then
