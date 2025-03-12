@@ -45,7 +45,7 @@ setup_branch() {
   # Add Git subtree if URL is provided
   if [ -n "$SUBTREE_REPO_URL" ]; then
     echo "🌲 Adding subtree for $BRANCH (branch: $SUBTREE_BRANCH)..."
-    git subtree add --prefix=subtree shared-types $SUBTREE_BRANCH --squash || echo "⚠️ Subtree already exists"
+    git subtree add --prefix=shared-types shared-types $SUBTREE_BRANCH  --squash || echo "⚠️ Subtree already exists"
   else
     echo "⚠️ No subtree URL provided, skipping..."
   fi
@@ -65,9 +65,11 @@ for BRANCH in "${BRANCHES[@]}"; do
       echo "⚠️ Branch $BRANCH already exists, skipping creation..."
   else
     echo "🚀 Creating branch $BRANCH from main..."
-    git checkout -b $BRANCH main
+    git branch $BRANCH main
   fi
 done
+
+git subtree add --prefix=shared-types shared-types main  --squash || echo "⚠️ Subtree already exists"
 
 for BRANCH in "${BRANCHES[@]}"; do
   setup_branch $BRANCH $BRANCH
