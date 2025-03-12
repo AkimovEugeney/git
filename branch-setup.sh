@@ -56,7 +56,12 @@ setup_branch() {
 
 # Create stage & dev branches based on main
 for BRANCH in "${BRANCHES[@]}"; do
-  git checkout -b $BRANCH main
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+      echo "⚠️ Branch $BRANCH already exists, skipping creation..."
+  else
+    echo "🚀 Creating branch $BRANCH from main..."
+    git checkout -b $BRANCH main
+  fi
 done
 
 for BRANCH in "${BRANCHES[@]}"; do
