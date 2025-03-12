@@ -34,14 +34,11 @@ setup_branch() {
   echo "🚀 Setting up branch: $BRANCH"
 
   # Create the branch from main
-  git checkout -b $BRANCH main
+  git checkout $BRANCH
 
   # Install Git hooks **before commit**
   echo "🔗 Installing Git hooks in $BRANCH..."
   curl -sSL https://raw.githubusercontent.com/AkimovEugeney/githook/main/setup-git-hooks.sh | bash
-
-  git add .git/hooks
-  git commit -m "Added Git hooks to $BRANCH"
 
   # Add Git subtree if URL is provided
   if [ -n "$SUBTREE_REPO_URL" ]; then
@@ -58,6 +55,10 @@ setup_branch() {
 }
 
 # Create stage & dev branches based on main
+for BRANCH in "${BRANCHES[@]}"; do
+  git checkout -b $BRANCH main
+done
+
 for BRANCH in "${BRANCHES[@]}"; do
   setup_branch $BRANCH $BRANCH
 done
