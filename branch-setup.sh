@@ -12,7 +12,7 @@ SUBTREE_REPO_URL=$1
 git checkout main
 
 # Install ESLint & Prettier
-npx ep-setup
+bunx ep-setup
 
 # Add Git remote for subtree if URL is provided
 if [ -n "$SUBTREE_REPO_URL" ]; then
